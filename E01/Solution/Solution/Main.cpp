@@ -1,10 +1,6 @@
 #include "Main.h"
-
-int main()
+int main(void)
 {
-	std::cout << "Hellow World\n";
-
-	std::cout << "Press enter to finish";
+	std::cout << "Hello World" << std::endl;
 	getchar();
-	return 0;
 }
