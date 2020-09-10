@@ -15,7 +15,11 @@ Date: 2017/05
 class Application
 {
 	MyMesh* m_pMesh = nullptr;
+	std::vector<MyMesh*> meshes;
+	std::vector<vector2*> positions;
+	int meshNum;
 	String m_sProgrammer = "Alberto Bobadilla - labigm@rit.edu";
+
 private:
 	static ImGuiObject gui; //GUI object
 
@@ -118,6 +122,8 @@ private:
 #pragma endregion
 
 #pragma region Main Loop
+	//Makes a cube mesh
+	void MakeCubeMesh(int x, int y);
 	/*
 	USAGE: Updates the scene
 	ARGUMENTS: ---
