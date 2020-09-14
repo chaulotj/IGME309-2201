@@ -274,9 +274,19 @@ void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions,
 
 	Release();
 	Init();
-
-	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	float angle = 0.0f;
+	std::vector<vector3> vertices;
+	for (int c = 0; c < a_nSubdivisions; c++) {
+		//Filling my vector with points in a circle
+		vector3 vertex = vector3(a_fRadius * cos(angle), a_fRadius * sin(angle), -a_fHeight/2);
+		vertices.push_back(vertex);
+		angle += 2 * PI / a_nSubdivisions;
+	}
+	for (int c = 0; c < a_nSubdivisions; c++) {
+		//Adding triangles to make the circle and to connect the edges of the circle to the top of the cone
+		AddTri(vector3(0, 0, -a_fHeight/2), vertices[c], vertices[(c + 1) % a_nSubdivisions]);
+		AddTri(vector3(0, 0, a_fHeight/2), vertices[(c + 1) % a_nSubdivisions], vertices[c]);
+	}
 	// -------------------------------
 
 	// Adding information about color
@@ -299,9 +309,26 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 	Release();
 	Init();
 
-	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
-	// -------------------------------
+	float angle = 0.0f;
+	std::vector<vector3> vertices;
+	for (int c = 0; c < a_nSubdivisions; c++) {
+		//Makes a bunch of points in a circle
+		vector3 vertex = vector3(a_fRadius * cos(angle), a_fRadius * sin(angle), 0.0f);
+		vertices.push_back(vertex);
+		angle += 2 * PI / a_nSubdivisions;
+	}
+	for (int c = 0; c < a_nSubdivisions; c++) {
+		int d = (c + 1) % a_nSubdivisions;
+		//Places points above and below the circle, to keep things centered
+		vector3 rightVector = vector3(vertices[d].x, vertices[d].y, vertices[d].z + a_fHeight/2);
+		vector3 leftVector = vector3(vertices[c].x, vertices[c].y, vertices[c].z + a_fHeight/2);
+		vector3 botRightVector = vector3(vertices[d].x, vertices[d].y, vertices[d].z - a_fHeight / 2);
+		vector3 botLeftVector = vector3(vertices[c].x, vertices[c].y, vertices[c].z - a_fHeight / 2);
+		//Makes the tris that connect the bottom and top triangles, and the quads that make up the sides
+		AddTri(vector3(0, 0, -a_fHeight / 2), botRightVector, botLeftVector);
+		AddTri(vector3(0, 0, a_fHeight/2), leftVector, rightVector);
+		AddQuad(botLeftVector, botRightVector, leftVector, rightVector);
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
@@ -329,9 +356,28 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 	Release();
 	Init();
 
-	// Replace this with your code
-	GenerateCube(a_fOuterRadius * 2.0f, a_v3Color);
-	// -------------------------------
+	float angle = 0.0f;
+	//Four vectors to hold all my points
+	std::vector<vector3> topInVertices;
+	std::vector<vector3> topOutVertices;
+	std::vector<vector3> bottomInVertices;
+	std::vector<vector3> bottomOutVertices;
+	for (int c = 0; c < a_nSubdivisions; c++) {
+		//Fills my vectors with the proper points
+		bottomInVertices.push_back(vector3(a_fInnerRadius * cos(angle), a_fInnerRadius * sin(angle), -a_fHeight / 2));
+		bottomOutVertices.push_back(vector3(a_fOuterRadius * cos(angle), a_fOuterRadius * sin(angle), -a_fHeight / 2));
+		topInVertices.push_back(vector3(a_fInnerRadius * cos(angle), a_fInnerRadius * sin(angle), a_fHeight/2));
+		topOutVertices.push_back(vector3(a_fOuterRadius * cos(angle), a_fOuterRadius * sin(angle), a_fHeight/2));
+		angle += 2 * PI / a_nSubdivisions;
+	}
+	for (int c = 0; c < a_nSubdivisions; c++) {
+		int d = (c + 1) % a_nSubdivisions;
+		//Makes quads between the top, bottom, and both sides of the tube
+		AddQuad(topInVertices[c], topInVertices[d], bottomInVertices[c], bottomInVertices[d]);
+		AddQuad(bottomInVertices[c], bottomInVertices[d], bottomOutVertices[c], bottomOutVertices[d]);
+		AddQuad(bottomOutVertices[c], bottomOutVertices[d], topOutVertices[c], topOutVertices[d]);
+		AddQuad(topOutVertices[c], topOutVertices[d], topInVertices[c], topInVertices[d]);
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
@@ -360,11 +406,35 @@ void MyMesh::GenerateTorus(float a_fOuterRadius, float a_fInnerRadius, int a_nSu
 
 	Release();
 	Init();
-
-	// Replace this with your code
-	GenerateCube(a_fOuterRadius * 2.0f, a_v3Color);
-	// -------------------------------
-
+	float angleA = 0.0f;
+	//A vector of vectors of points
+	std::vector<std::vector<vector3>> vLists;
+	for (int c = 0; c < a_nSubdivisionsB; c++) {
+		//Fills the vector with other vectors
+		std::vector<vector3> vec;
+		vLists.push_back(vec);
+	}
+	//The radius of the outside circle in the torus
+	float a = (a_fOuterRadius - a_fInnerRadius) / 2;
+	//The center of the outside circle in the torus
+	float b = (a_fOuterRadius + a_fInnerRadius) / 2;
+	for (int c = 0; c < a_nSubdivisionsA; c++) {
+		float angleB = 0.0f;
+		for (int d = 0; d < a_nSubdivisionsB; d++) {
+			//Uses the torus formula to place points properly
+			vLists[d].push_back(vector3((b + (a * cos(angleA))) * cos(angleB), (b + (a * cos(angleA))) * sin(angleB), a*sin(angleA)));
+			angleB += 2 * PI / a_nSubdivisionsB;
+		}
+		angleA += 2 * PI / a_nSubdivisionsA;
+	}
+	for (int c = 0; c < a_nSubdivisionsA; c++) {
+		int d = (c + 1) % a_nSubdivisionsA;
+		for (int e = 0; e < a_nSubdivisionsB; e++) {
+			int f = (e + 1) % a_nSubdivisionsB;
+			//Makes all the quads between all the adjacent points of the torus
+			AddQuad(vLists[e][c], vLists[e][d], vLists[f][c], vLists[f][d]);
+		}
+	}
 	// Adding information about color
 	CompleteMesh(a_v3Color);
 	CompileOpenGL3X();
@@ -385,10 +455,42 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 
 	Release();
 	Init();
-
-	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
-	// -------------------------------
+	//Another vector of vectors
+	std::vector<std::vector<vector3>> vLists;
+	for (int c = 0; c < a_nSubdivisions; c++) {
+		//Filling our vector with vectors
+		std::vector<vector3> vec;
+		vLists.push_back(vec);
+	}
+	float angleA = 0.0f;
+	for (int c = 0; c < a_nSubdivisions; c++) {
+		float angleB = PI / a_nSubdivisions;
+		for (int d = 0; d < a_nSubdivisions - 1; d++) {
+			//Makes all the points between the two ends based on the parametric formula for spheres
+			float u = a_fRadius * cos(angleB);
+			float v = sqrtf(pow(a_fRadius, 2) - pow(u, 2));
+			vLists[c].push_back(vector3(v * cos(angleA), v * sin(angleA), u));
+			angleB += PI / a_nSubdivisions;
+		}
+		angleA += 2 * PI / a_nSubdivisions;
+	}
+	for (int c = 0; c < a_nSubdivisions; c++) {
+		//Adds triangles between the top and the first set of points
+		int d = (c + 1) % a_nSubdivisions;
+		AddTri(vector3(0, 0, a_fRadius), vLists[c][0], vLists[d][0]);
+	}
+	for (int c = 0; c < a_nSubdivisions - 2; c++) {
+		//Makes quads between all the middle points
+		for (int d = 0; d < a_nSubdivisions; d++) {
+			int e = (d + 1) % a_nSubdivisions;
+			AddQuad(vLists[d][c], vLists[d][c + 1], vLists[e][c], vLists[e][c + 1]);
+		}
+	}
+	for (int c = 0; c < a_nSubdivisions; c++) {
+		//Makes tris between the bottom and the last set of points
+		int d = (c + 1) % a_nSubdivisions;
+		AddTri(vector3(0, 0, -a_fRadius), vLists[d][a_nSubdivisions-2], vLists[c][a_nSubdivisions - 2]);
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
