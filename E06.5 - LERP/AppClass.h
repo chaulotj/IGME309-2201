@@ -15,6 +15,10 @@ class Application
 	String m_sProgrammer = "Alberto Bobadilla - labigm@rit.edu";
 	std::vector<vector3> m_stopsList;
 	Simplex::Model* m_pModel = nullptr;
+	int targetIndex = 0;
+	vector3 startPos = vector3(0, 0, 0);
+	vector3 normTarget;
+	vector3 lastPos = vector3(0,0,0);
 private:
 	static ImGuiObject gui; //GUI object
 	

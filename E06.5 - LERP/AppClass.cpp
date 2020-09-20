@@ -1,8 +1,11 @@
 #include "AppClass.h"
+vector3 Normalize(vector3 vec) {
+	return vec / length(vec);
+}
 void Application::InitVariables(void)
 {
 	//Change this to your name and email
-	m_sProgrammer = "Alberto Bobadilla - labigm@rit.edu";
+	m_sProgrammer = "Julien Chaulot - jec1862@rit.edu";
 
 	//Set the position and target of the camera
 	m_pCameraMngr->SetPositionTargetAndUpward(vector3(5.0f,3.0f,15.0f), ZERO_V3, AXIS_Y);
@@ -26,9 +29,11 @@ void Application::InitVariables(void)
 	m_stopsList.push_back(vector3(5.0f, 2.0f, -5.0f));
 
 	m_stopsList.push_back(vector3(1.0f, 3.0f, -5.0f));
+	normTarget = Normalize(m_stopsList[0]);
 }
 void Application::Update(void)
 {
+	
 	//Update the system so it knows how much time has passed since the last call
 	m_pSystem->Update();
 
@@ -59,7 +64,39 @@ void Application::Display(void)
 
 
 	//your code goes here
-	v3CurrentPos = vector3(0.0f, 0.0f, 0.0f);
+	v3CurrentPos = lastPos + (normTarget / 10);
+	lastPos = v3CurrentPos;
+	bool gonePast;
+	//My checks to see if it has lerped past the target
+	if (startPos.x < m_stopsList[targetIndex].x && v3CurrentPos.x < m_stopsList[targetIndex].x) {
+		gonePast = false;
+	}
+	else if (startPos.x > m_stopsList[targetIndex].x && v3CurrentPos.x > m_stopsList[targetIndex].x) {
+		gonePast = false;
+	}
+	else if (startPos.y < m_stopsList[targetIndex].y && v3CurrentPos.y < m_stopsList[targetIndex].y) {
+		gonePast = false;
+	}
+	else if (startPos.y > m_stopsList[targetIndex].y && v3CurrentPos.y > m_stopsList[targetIndex].y) {
+		gonePast = false;
+	}
+	else if (startPos.z < m_stopsList[targetIndex].z && v3CurrentPos.z < m_stopsList[targetIndex].z) {
+		gonePast = false;
+	}
+	else if (startPos.z > m_stopsList[targetIndex].z && v3CurrentPos.z > m_stopsList[targetIndex].z) {
+		gonePast = false;
+	}
+	else {
+		gonePast = true;
+	}
+	if (gonePast) {
+		//Changing targets
+		v3CurrentPos = m_stopsList[targetIndex];
+		lastPos = v3CurrentPos;
+		targetIndex = (targetIndex + 1) % m_stopsList.size();
+		startPos = v3CurrentPos;
+		normTarget = Normalize(m_stopsList[targetIndex] - v3CurrentPos);
+	}
 	//-------------------
 	
 
