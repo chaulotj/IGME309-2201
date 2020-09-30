@@ -432,7 +432,7 @@ void MyMesh::GenerateTorus(float a_fOuterRadius, float a_fInnerRadius, int a_nSu
 		for (int e = 0; e < a_nSubdivisionsB; e++) {
 			int f = (e + 1) % a_nSubdivisionsB;
 			//Makes all the quads between all the adjacent points of the torus
-			AddQuad(vLists[e][c], vLists[e][d], vLists[f][c], vLists[f][d]);
+			AddQuad(vLists[e][d], vLists[e][c], vLists[f][d], vLists[f][c]);
 		}
 	}
 	// Adding information about color
