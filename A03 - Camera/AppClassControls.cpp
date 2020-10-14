@@ -368,6 +368,12 @@ void Application::CameraRotation(float a_fSpeed)
 		fDeltaMouse = static_cast<float>(MouseY - CenterY);
 		fAngleX += fDeltaMouse * a_fSpeed;
 	}
+	//Using the right vector to find the pitch quaternion
+	quaternion pitch = glm::angleAxis(-fAngleX, glm::normalize(glm::cross(glm::normalize(m_pCamera->GetAbove() - m_pCamera->GetPosition()), glm::normalize(m_pCamera->GetTarget() - m_pCamera->GetPosition()))));
+	//Using the up vector to find the yaw quaternion
+	quaternion yaw = glm::angleAxis(-fAngleY, glm::normalize((m_pCamera->GetAbove()-m_pCamera->GetPosition())));
+	//Setting the target based on the vector from target to position, the pitch, and the yaw
+	m_pCamera->SetTarget(((m_pCamera->GetTarget() - m_pCamera->GetPosition()) * pitch * yaw) + m_pCamera->GetPosition());
 	//Change the Yaw and the Pitch of the camera
 	SetCursorPos(CenterX, CenterY);//Position the mouse in the center
 }
@@ -385,11 +391,38 @@ void Application::ProcessKeyboard(void)
 
 	if (fMultiplier)
 		fSpeed *= 5.0f;
-
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-		m_pCamera->MoveForward(fSpeed);
-	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-		m_pCamera->MoveForward(-fSpeed);
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+		//A vector that represents a spot in front of the camera
+		vector3 moveForward = glm::normalize(m_pCamera->GetTarget() - m_pCamera->GetPosition()) / 10;
+		//Moves the camera forward
+		m_pCamera->SetPositionTargetAndUpward(m_pCamera->GetPosition() + moveForward, m_pCamera->GetTarget() + moveForward, m_pCamera->GetAbove() - m_pCamera->GetPosition());
+	}
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+		//A vector that represents a spot in front of the camera
+		vector3 moveForward = glm::normalize(m_pCamera->GetTarget() - m_pCamera->GetPosition()) / 10;
+		//Moves the camera backward
+		m_pCamera->SetPositionTargetAndUpward(m_pCamera->GetPosition() - moveForward, m_pCamera->GetTarget() - moveForward, m_pCamera->GetAbove() - m_pCamera->GetPosition());
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
+		//Moves the camera upward
+		m_pCamera->SetPositionTargetAndUpward(m_pCamera->GetPosition() + vector3(0, .1, 0), m_pCamera->GetTarget() + vector3(0, .1, 0), m_pCamera->GetAbove() - m_pCamera->GetPosition());
+	}
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
+		//Moves the camera downward
+		m_pCamera->SetPositionTargetAndUpward(m_pCamera->GetPosition() - vector3(0, .1, 0), m_pCamera->GetTarget() - vector3(0, .1, 0), m_pCamera->GetAbove() - m_pCamera->GetPosition());
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+		//A vector that uses the cross product of the upward vector and the forward vector to find the left vector
+		vector3 cpr = glm::cross(glm::normalize(m_pCamera->GetAbove()-m_pCamera->GetPosition()), glm::normalize(m_pCamera->GetTarget() - m_pCamera->GetPosition()));
+		//Moves the camera left
+		m_pCamera->SetPositionTargetAndUpward(m_pCamera->GetPosition() + (cpr/10), m_pCamera->GetTarget() + (cpr/10), m_pCamera->GetAbove() - m_pCamera->GetPosition());
+	}
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+		//A vector that uses the negative cross product of the upward vector and the forward vector to find the right vector
+		vector3 cpr = -glm::cross(glm::normalize(m_pCamera->GetAbove() - m_pCamera->GetPosition()), glm::normalize(m_pCamera->GetTarget() - m_pCamera->GetPosition()));
+		//Moves the camera right
+		m_pCamera->SetPositionTargetAndUpward(m_pCamera->GetPosition() + (cpr / 10), m_pCamera->GetTarget() + (cpr / 10), m_pCamera->GetAbove() - m_pCamera->GetPosition());
+	}
 #pragma endregion
 }
 //Joystick
